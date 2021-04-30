@@ -1,0 +1,82 @@
+{"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "keyVaultName": {
+            "defaultValue": "armtmptest234567yu8",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the key vault where key is stored."
+            }
+        },
+        "keyVaultRG": {
+            "defaultValue": "[resourceGroup().name]",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the resource group where key vault has deployed. Replace the value with a custom value if teh resource group is different"
+            }
+        },
+        "functionAppName": {
+            "defaultValue": "[concat(resourceGroup().name, '-StorageAccount-rotation-fnapp')]",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the function app that you wish to use."
+            }
+		},
+        "functionHandlerName": {
+            "defaultValue": "AKVStorageAccountRotation",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the function that handles the event"
+            }
+		}
+    },
+    "variables": {	
+        "eventSubscriptionName": "kv-secret-near-expiry"	
+    },
+    "resources": [
+        {
+            "name": "kv-secret-rotation-design-pattern",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "subscriptionId": "[subscription().subscriptionId]",
+            "resourceGroup": "[parameters('keyVaultRG')]",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {	
+                            "type": "Microsoft.KeyVault/vaults/providers/eventSubscriptions",
+                            "apiVersion": "2020-01-01-preview",
+                            "name": "[concat(parameters('keyVaultName'),'/Microsoft.EventGrid/',variables('eventSubscriptionName'))]",
+                            "location": "[resourceGroup().location]",
+                            "dependsOn": [                          
+                            ],
+                            "properties": {
+                                "destination": {
+                                    "endpointType": "AzureFunction",
+                                    "properties": {
+                                        "maxEventsPerBatch": 1,
+                                        "preferredBatchSizeInKilobytes": 64,
+                                        "resourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('functionAppName')),'/functions/',parameters('functionHandlerName'))]"
+                                    }
+                                },
+                                "filter": {
+                                    "includedEventTypes": ["Microsoft.KeyVault.SecretNearExpiry"]                                  
+                                },
+                                "retryPolicy": {
+                                    "maxDeliveryAttempts": 3,
+                                    "eventTimeToLiveInMinutes": 120
+                                  }
+                            }
+                        }
+                    ]
+                }
+            }
+            
+        }
+       
+    ]
+}

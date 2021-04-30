@@ -1,0 +1,390 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Check_whether_the_function_app_was_successful_or_not": {
+                "actions": {
+                    "Set_sucess_email_body": {
+                        "inputs": {
+                            "name": "temp",
+                            "value": "@parameters('SuccessBody')"
+                        },
+                        "runAfter": {},
+                        "type": "SetVariable"
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "Set_error_message_body": {
+                            "inputs": {
+                                "name": "temp",
+                                "value": "@parameters('ErrorMessageBody')"
+                            },
+                            "runAfter": {},
+                            "type": "SetVariable"
+                        }
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@triggerBody()?['Success']",
+                                "@true"
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Compose_Email_Body": {
+                "actions": {
+                    "Compose": {
+                        "inputs": "@variables('temp')",
+                        "runAfter": {},
+                        "type": "Compose"
+                    },
+                    "Replace_ErrorMessage_token_from_email_body": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_subscriptionId_token_from_email_body').inputs.value,'{errormessage}',if(equals(triggerBody()?['Error']?['Exception']?['Message'],null),string('NA'),triggerBody()?['Error']?['Exception']?['Message']))\r\n\r\n}"
+                        },
+                        "runAfter": {
+                            "Replace_subscriptionId_token_from_email_body": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_KeyVault_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(variables('temp'),'{KeyVaultName}',if(equals(triggerBody()?['KeyVaultName'],null),string('NA'),triggerBody()?['KeyVaultName']))}"
+                        },
+                        "runAfter": {
+                            "Compose": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_NewVersionDate_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{\r\nreplace(actions('Replace_OldVersionDate_token_from_emailbody').inputs.value,'{NewVersion}',if(equals(triggerBody()?['NewVersion'],null),string('NA'),triggerBody()?['NewVersion']))}"
+                        },
+                        "runAfter": {
+                            "Replace_OldVersionDate_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_OldExpiryDate_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_SecretName_token_from_emailbody').inputs.value,'{OldExpiryDate}',if(equals(triggerBody()?['OldExpiryDate'],null),string('NA'),string(triggerBody()?['OldExpiryDate'])))}"
+                        },
+                        "runAfter": {
+                            "Replace_SecretName_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_OldVersionDate_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{\r\nreplace(actions('Replace_UpdatedExpiryDate_token_from_emailbody').inputs.value,'{OldVersion}',if(equals(triggerBody()?['OldVersion'],null),string('NA'),triggerBody()?['OldVersion']))}"
+                        },
+                        "runAfter": {
+                            "Replace_UpdatedExpiryDate_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_ResourceGroup_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_StorageAccount_token_from_emailbody').inputs.value,'{ResourceGroup}',if(equals(triggerBody()?['ResourceGroup'],null),string('NA'),triggerBody()?['ResourceGroup']))}"
+                        },
+                        "runAfter": {
+                            "Replace_StorageAccount_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_SecretName_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_KeyVault_token_from_emailbody').inputs.value,'{SecretName}',if(equals(triggerBody()?['SecretName'],null),string('NA'),triggerBody()?['SecretName']))}"
+                        },
+                        "runAfter": {
+                            "Replace_KeyVault_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_StackTrace_token_from_email_body": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_ErrorMessage_token_from_email_body').inputs.value,'{errorstack}',if(equals(triggerBody()?['Error']?['Exception']?['StackTrace'],null),string('NA'),triggerBody()?['Error']?['Exception']?['StackTrace']))}"
+                        },
+                        "runAfter": {
+                            "Replace_ErrorMessage_token_from_email_body": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_StorageAccount_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_NewVersionDate_token_from_emailbody').inputs.value,'{StorageAccount}',if(equals(triggerBody()?['StorageAccount'],null),string('NA'),triggerBody()?['StorageAccount']))}"
+                        },
+                        "runAfter": {
+                            "Replace_NewVersionDate_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_UpdatedExpiryDate_token_from_emailbody": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{\r\nreplace(actions('Replace_OldExpiryDate_token_from_emailbody').inputs.value,'{UpdatedExpiryDate}',if(equals(triggerBody()?['UpdatedExpiryDate'],null),string('NA'),triggerBody()?['UpdatedExpiryDate']))}"
+                        },
+                        "runAfter": {
+                            "Replace_OldExpiryDate_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_line_token_from_email_body": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_methodname_token_from_email_body').inputs.value,'{line}',if(equals(triggerBody()?['Error']?['InvocationInfo']?['Line'],null),string('NA'),triggerBody()?['Error']?['InvocationInfo']?['Line']))}"
+                        },
+                        "runAfter": {
+                            "Replace_methodname_token_from_email_body": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_methodname_token_from_email_body": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_StackTrace_token_from_email_body').inputs.value,'{methodname}',if(equals(triggerBody()?['Error']?['InvocationInfo']?['InvocationName'],null),string('NA'),triggerBody()?['Error']?['InvocationInfo']?['InvocationName']))}"
+                        },
+                        "runAfter": {
+                            "Replace_StackTrace_token_from_email_body": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Replace_subscriptionId_token_from_email_body": {
+                        "inputs": {
+                            "name": "Email Body",
+                            "value": "@{replace(actions('Replace_ResourceGroup_token_from_emailbody').inputs.value,'{Subsciption}',if(equals(triggerBody()?['Subsciption'],null),string('NA'),triggerBody()?['Subsciption']))}"
+                        },
+                        "runAfter": {
+                            "Replace_ResourceGroup_token_from_emailbody": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    }
+                },
+                "runAfter": {
+                    "Check_whether_the_function_app_was_successful_or_not": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Scope"
+            },
+            "Fetch_email_subject": {
+                "inputs": "@parameters('Subject')",
+                "runAfter": {
+                    "Fetch_sender_list": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Compose"
+            },
+            "Fetch_sender_list": {
+                "inputs": "@join(parameters('UserList'),';')",
+                "runAfter": {},
+                "type": "Compose"
+            },
+            "Initialize_Email_Body": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "Email Body",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Fetch_email_subject": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "temp",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_Email_Body": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Notify_users": {
+                "inputs": {
+                    "body": {
+                        "Body": "<p>@{actions('Replace_line_token_from_email_body').inputs.value}</p>",
+                        "Subject": "@parameters('Subject')",
+                        "To": "@{join(parameters('UserList'),';')}"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/v2/Mail"
+                },
+                "runAfter": {
+                    "Compose_Email_Body": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            },
+            "ErrorMessageBody": {
+                "defaultValue": "<html> <head> <style> code {   font-family: Consolas,\"courier new\";   color: crimson;   background-color: #f1f1f1;   padding: 2px;   font-size: 105%; } table {   font-family: arial, sans-serif;   border-collapse: collapse;   width: 100%; }  td, th {   border: 1px solid #dddddd;   text-align: left;   padding: 8px; }  tr:nth-child(even) {   background-color: #dddddd; } p { font-size: medium; } </style> </head> <body>  <p>Key vaut secret rotation operation has failed . Please find the details of the operation below and errors below .</p>  <table>   <tr>     <th>Key Vault Name</th>     <th>Secret Name</th>     <th>StoageAccount</th>     <th>Old Expiry Date</th>     <th>Updated Expiry Date</th>     <th>Old secret version</th>     <th>New Version</th>   </tr>   <tr>    <td><a href=\"https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/{Subsciption}/resourceGroups/{ResourceGroup}/providers/Microsoft.KeyVault/vaults/{KeyVaultName}/overview\">{KeyVaultName}</a></td>    <td>{SecretName}</td>      <td><a href=\"https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/{Subsciption}/resourceGroups/{ResourceGroup}/providers/Microsoft.Storage/storageAccounts/{StorageAccount}/overview\">{StorageAccount}</a></td>     <td>{OldExpiryDate}</td>     <td>{UpdatedExpiryDate}</td>     <td>{OldVersion}</td>     <td>{NewVersion}</td>   </tr> </table><h3>Error details</h3>  <p><code>Message : {errormessage}</br></br>Error Stack : {errorstack}</br></br>Method name : {methodname}</br></br>Error Line : {line}</code></p><p>Incase you have any queries or concern's , please get in touch with your system administrator</p>  </body> </html>",
+                "type": "String"
+            },
+            "Subject": {
+                "defaultValue": "KV Secret rotation notification",
+                "type": "String"
+            },
+            "SuccessBody": {
+                "defaultValue": "<html> <head> <style> table {   font-family: arial, sans-serif;   border-collapse: collapse;   width: 100%; }  td, th {   border: 1px solid #dddddd;   text-align: left;   padding: 8px; }  tr:nth-child(even) {   background-color: #dddddd; } p { font-size: medium; } </style> </head> <body>  <p>Key vaut secret rotation operation completed successfully. Please find the details of the operation below .</p>  <table>   <tr>     <th>Key Vault Name</th>     <th>Secret Name</th>     <th>StoageAccount</th>     <th>Old Expiry Date</th>     <th>Updated Expiry Date</th>     <th>Old secret version</th>     <th>New Version</th>   </tr>   <tr>    <td><a href=\"https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/{Subsciption}/resourceGroups/{ResourceGroup}/providers/Microsoft.KeyVault/vaults/{KeyVaultName}/overview\">{KeyVaultName}</a></td>    <td>{SecretName}</td>      <td><a href=\"https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/{Subsciption}/resourceGroups/{ResourceGroup}/providers/Microsoft.Storage/storageAccounts/{StorageAccount}/overview\">{StorageAccount}</a></td>     <td>{OldExpiryDate}</td>     <td>{UpdatedExpiryDate}</td>     <td>{OldVersion}</td>     <td>{NewVersion}</td>   </tr> </table>  <p>Incase you have any queries or concern's , please get in touch with your system administrator</p>  </body> </html>",
+                "type": "String"
+            },
+            "UserList": {
+                "defaultValue": [
+                    "arun.menon@ampf.com"
+                ],
+                "type": "Array"
+            }
+        },
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "schema": {
+                        "properties": {
+                            "KeyVaultName": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "NewVersion": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "OldExpiryDate": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "OldVersion": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "ResourceGroup": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "SecretName": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "StorageAccount": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "Success": {
+                                "type": [
+                                    "boolean",
+                                    "null"
+                                ]
+                            },
+                            "UpdatedExpiryDate": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "office365": {
+                    "connectionId": "/subscriptions/71420b11-5806-4ab8-b912-b21d48eb7a0e/resourceGroups/azrg-zuw0-sumo-logic/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365",
+                    "id": "/subscriptions/71420b11-5806-4ab8-b912-b21d48eb7a0e/providers/Microsoft.Web/locations/eastus2/managedApis/office365"
+                }
+            }
+        }
+    }
+}
